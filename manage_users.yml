@@ -1,0 +1,79 @@
+---
+
+- hosts: all
+  become: yes
+
+  vars_files:
+      - vars/config.yml
+      - vars/techops.yml
+      - vars/users.yml
+      - vars/creds.yml
+
+  tasks:
+
+      - name: Disable techops users for people who are no longer employee
+        user:
+            name: '{{ item.username }}'
+            shell: /bin/false
+        with_items: '{{ disabled_techops_users }}'
+
+      - name: Disable regular users for people who are no longer working on this platform
+        user:
+            name: '{{ item.username }}'
+            shell: /bin/false
+        with_items: '{{ disabled_regular_users }}'
+
+      - name: Making sure techops users are present and well
+        user:
+            name: '{{ item.username }}'
+            comment: '{{ item.name }}'
+            state: present
+            groups: wheel,users
+        with_items: '{{ techops_users }}'
+        when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+      - name: Making sure techops users are present and well
+        user:
+            name: '{{ item.username }}'
+            comment: '{{ item.name }}'
+            state: present
+            groups: sudo,users
+        with_items: '{{ techops_users }}'
+        when: ansible_distribution == 'Ubuntu'
+
+
+      - name: Making sure regular users are present and well
+        user:
+            name: '{{ item.username }}'
+            comment: '{{ item.name }}'
+            state: present
+            groups: wheel,users
+        with_items: '{{ regular_users }}'
+        when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+      - name: Making sure regular users are present and well
+        user:
+            name: '{{ item.username }}'
+            comment: '{{ item.name }}'
+            state: present
+            groups: sudo,users
+        with_items: '{{ regular_users }}'
+        when: ansible_distribution == 'Ubuntu'
+
+      - name: get public keys from webdav
+        become: no
+        delegate_to: 127.0.0.1
+        get_url:
+            url_username: '{{ url_user }}'
+            url_password: '{{ url_pass }}'
+            url: {{ url_webdav }/{{ item.keyname }}
+            dest: /tmp/{{ item.keyname }}
+        with_items: '{{ techops_users + regular_users }}'
+
+      - name: Set authorized ssh keys for all users
+        authorized_key:
+            user: '{{ item.username }}'
+            state: present
+            key: "{{ lookup('file', ssh_key_dir + '/' + item.keyname) }}"
+        with_items: '{{ techops_users + regular_users }}'
+

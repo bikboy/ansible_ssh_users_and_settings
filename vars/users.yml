@@ -1,0 +1,10 @@
+---
+
+regular_users:
+    - username: test2
+      name: 'test2 user'
+      keyname: test2.pub
+
+disabled_regular_users:
+    - username: ttest2
+

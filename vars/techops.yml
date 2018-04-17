@@ -1,0 +1,12 @@
+---
+#
+# TechOPS Users
+#
+
+techops_users:
+    - username: test
+      name: 'test user'
+      keyname: testuser.pem
+
+disabled_techops_users:
+    - username: ttest

@@ -1,0 +1,5 @@
+---
+
+sshd_config: /etc/ssh/sshd_config
+sshd: sshd
+ssh_key_dir: /tmp
